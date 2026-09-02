@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプル家計簿アプリ</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .summary-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .summary-card .amount {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .income-text { color: var(--success-color); }
+        .expense-text { color: var(--danger-color); }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #475569;
+        }
+
+        input, select, button {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .filter-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .delete-btn {
+            background-color: var(--danger-color);
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            form {
+                grid-template-columns: 1fr;
+            }
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>💰 シンプル家計簿</h1>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>今月の収入</h3>
+                <div id="total-income" class="amount income-text">¥0</div>
+            </div>
+            <div class="summary-card">
+                <h3>今月の支出</h3>
+                <div id="total-expense" class="amount expense-text">¥0</div>
+            </div>
+            <div class="summary-card">
+                <h3>今月の収支</h3>
+                <div id="balance" class="amount">¥0</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <form id="transaction-form">
+                <div class="form-group">
+                    <label for="type">収支区分</label>
+                    <select id="type">
+                        <option value="expense">支出</option>
+                        <option value="income">収入</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="date">日付</label>
+                    <input type="date" id="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">分類</label>
+                    <input type="text" id="category" placeholder="例: 食費, 給与" required>
+                </div>
+                <div class="form-group">
+                    <label for="amount">金額 (円)</label>
+                    <input type="number" id="amount" placeholder="例: 1500" required min="1">
+                </div>
+                <button type="submit">追加</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="filter-container">
+                <h3>履歴一覧</h3>
+                <div>
+                    <label for="month-filter">月選択: </label>
+                    <input type="month" id="month-filter">
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>日付</th>
+                        <th>区分</th>
+                        <th>分類</th>
+                        <th>金額</th>
+                        <th>操作</th>
+                    </tr>
+                K</tr>
+                <tbody id="transaction-list">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // ローカルストレージからデータを取得（なければ空配列）
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+        const form = document.getElementById('transaction-form');
+        const typeInput = document.getElementById('type');
+        const dateInput = document.getElementById('date');
+        const categoryInput = document.getElementById('category');
+        const amountInput = document.getElementById('amount');
+        const transactionList = document.getElementById('transaction-list');
+        const totalIncomeEl = document.getElementById('total-income');
+        const totalExpenseEl = document.getElementById('total-expense');
+        const balanceEl = document.getElementById('balance');
+        const monthFilter = document.getElementById('month-filter');
+
+        // デフォルトで今日の日付と今月をセット
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        const currentMonthStr = today.slice(0, 7);
+        monthFilter.value = currentMonthStr;
+
+        // フォーム送信時の処理
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const newTransaction = {
+                id: Date.now(),
+                type: typeInput.value,
+                date: dateInput.value,
+                category: categoryInput.value.trim(),
+                amount: Number(amountInput.value)
+            };
+
+            transactions.push(newTransaction);
+            saveAndRender();
+            form.reset();
+            dateInput.value = today;
+            typeInput.value = 'expense';
+        });
+
+        // データの保存と画面の再描画
+        function saveAndRender() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            render();
+        }
+
+        // データの削除
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveAndRender();
+        }
+
+        // 画面描画関数
+        function render() {
+            transactionList.innerHTML = '';
+            const selectedMonth = monthFilter.value;
+
+            // 月でフィルタリング
+            const filteredTransactions = transactions.filter(t => {
+                if (!selectedMonth) return true;
+                return t.date.startsWith(selectedMonth);
+            });
+
+            // 日付順にソート（新しい順）
+            filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            filteredTransactions.forEach(t => {
+                if (t.type === 'income') {
+                    totalIncome += t.amount;
+                } else {
+                    totalExpense += t.amount;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${t.date}</td>
+                    <td><span class="${t.type === 'income' ? 'income-text' : 'expense-text'}">${t.type === 'income' ? '収入' : '支出'}</span></td>
+                    <td>${escapeHTML(t.category)}</td>
+                    <td class="${t.type === 'income' ? 'income-text' : 'expense-text'}">${t.type === 'income' ? '+' : '-'}¥${t.amount.toLocaleString()}</td>
+                    <td><button class="delete-btn" onclick="deleteTransaction(${t.id})">削除</button></td>
+                `;
+                transactionList.appendChild(tr);
+            });
+
+            const balance = totalIncome - totalExpense;
+
+            totalIncomeEl.textContent = `¥${totalIncome.toLocaleString()}`;
+            totalExpenseEl.textContent = `¥${totalExpense.toLocaleString()}`;
+            balanceEl.textContent = `¥${balance.toLocaleString()}`;
+            balanceEl.className = `amount ${balance >= 0 ? 'income-text' : 'expense-text'}`;
+        }
+
+        // 月フィルター変更時
+        monthFilter.addEventListener('change', render);
+
+        // XSS対策の簡易エスケープ
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // 初回描画
+        render();
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>シンプル家計簿アプリ</title>
+    <!-- グラフ描画ライブラリ Chart.js の読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -24,7 +25,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
         }
 
@@ -73,7 +74,7 @@
 
         form {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) 1fr auto;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) 1fr auto;
             gap: 10px;
             align-items: end;
         }
@@ -147,7 +148,7 @@
             margin: 20px auto 0 auto;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 700px) {
             form {
                 grid-template-columns: 1fr;
             }
@@ -162,6 +163,7 @@
     <div class="container">
         <h1>💰 シンプル家計簿</h1>
 
+        <!-- サマリー表示 -->
         <div class="summary-grid">
             <div class="summary-card">
                 <h3>今月の収入</h3>
@@ -177,6 +179,7 @@
             </div>
         </div>
 
+        <!-- 入力フォーム -->
         <div class="card">
             <form id="transaction-form">
                 <div class="form-group">
@@ -191,8 +194,14 @@
                     <input type="date" id="date" required>
                 </div>
                 <div class="form-group">
-                    <label for="category">分類</label>
-                    <input type="text" id="category" placeholder="例: 食費, 給与" required>
+                    <label for="category">分類（リスト選択）</label>
+                    <select id="category">
+                        <!-- JavaScriptで収支に応じて動的に切り替えます -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="memo">内容・メモ（自由記述）</label>
+                    <input type="text" id="memo" placeholder="例: カフェ, ユニクロなど">
                 </div>
                 <div class="form-group">
                     <label for="amount">金額 (円)</label>
@@ -202,6 +211,7 @@
             </form>
         </div>
 
+        <!-- 分類別内訳 ＆ グラフ -->
         <div class="card">
             <h3>分類ごとの内訳（今月）</h3>
             <table>
@@ -213,13 +223,15 @@
                     </tr>
                 </thead>
                 <tbody id="category-summary-list">
-                    </tbody>
+                    <!-- JavaScriptで動的挿入 -->
+                </tbody>
             </table>
             <div class="chart-container">
                 <canvas id="expenseChart"></canvas>
             </div>
         </div>
 
+        <!-- 一覧・フィルター -->
         <div class="card">
             <div class="filter-container">
                 <h3>履歴一覧</h3>
@@ -234,12 +246,14 @@
                         <th>日付</th>
                         <th>区分</th>
                         <th>分類</th>
+                        <th>内容</th>
                         <th>金額</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody id="transaction-list">
-                    </tbody>
+                    <!-- JavaScriptで動的に挿入 -->
+                </tbody>
             </table>
         </div>
     </div>
@@ -251,6 +265,7 @@
         const typeInput = document.getElementById('type');
         const dateInput = document.getElementById('date');
         const categoryInput = document.getElementById('category');
+        const memoInput = document.getElementById('memo');
         const amountInput = document.getElementById('amount');
         const transactionList = document.getElementById('transaction-list');
         const categorySummaryList = document.getElementById('category-summary-list');
@@ -260,6 +275,27 @@
         const monthFilter = document.getElementById('month-filter');
 
         let expenseChart = null;
+
+        // 分類マスター定義
+        const categories = {
+            expense: ['食費', '家具', '洋服', '娯楽', '交通費', '光熱費', '家賃', 'その他'],
+            income: ['給与', '賞与', '副業', 'お小遣い', 'その他']
+        };
+
+        // セレクトボックスの選択肢を更新する関数
+        function updateCategoryOptions() {
+            const type = typeInput.value;
+            categoryInput.innerHTML = '';
+            categories[type].forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categoryInput.appendChild(option);
+            });
+        }
+
+        typeInput.addEventListener('change', updateCategoryOptions);
+        updateCategoryOptions(); // 初期化時
 
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
@@ -273,7 +309,8 @@
                 id: Date.now(),
                 type: typeInput.value,
                 date: dateInput.value,
-                category: categoryInput.value.trim(),
+                category: categoryInput.value,
+                memo: memoInput.value.trim() || '-',
                 amount: Number(amountInput.value)
             };
 
@@ -282,6 +319,7 @@
             form.reset();
             dateInput.value = today;
             typeInput.value = 'expense';
+            updateCategoryOptions();
         });
 
         function saveAndRender() {
@@ -317,19 +355,20 @@
                     totalExpense += t.amount;
                 }
 
-                // 分類ごとの集計キー（区分_分類）
+                // 選択された分類ごとの集計キー
                 const key = `${t.type}_${t.category}`;
                 if (!categoryTotals[key]) {
                     categoryTotals[key] = { type: t.type, category: t.category, amount: 0 };
                 }
                 categoryTotals[key].amount += t.amount;
 
-                // 履歴一覧の描画
+                // 履歴一覧の描画（分類と内容を分ける）
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${t.date}</td>
                     <td><span class="${t.type === 'income' ? 'income-text' : 'expense-text'}">${t.type === 'income' ? '収入' : '支出'}</span></td>
-                    <td>${escapeHTML(t.category)}</td>
+                    <td><b>${escapeHTML(t.category)}</b></td>
+                    <td>${escapeHTML(t.memo)}</td>
                     <td class="${t.type === 'income' ? 'income-text' : 'expense-text'}">${t.type === 'income' ? '+' : '-'}¥${t.amount.toLocaleString()}</td>
                     <td><button class="delete-btn" onclick="deleteTransaction(${t.id})">削除</button></td>
                 `;
@@ -347,12 +386,12 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><span class="${item.type === 'income' ? 'income-text' : 'expense-text'}">${item.type === 'income' ? '収入' : '支出'}</span></td>
-                    <td>${escapeHTML(item.category)}</td>
+                    <td><b>${escapeHTML(item.category)}</b></td>
                     <td class="${item.type === 'income' ? 'income-text' : 'expense-text'}">¥${item.amount.toLocaleString()}</td>
                 `;
                 categorySummaryList.appendChild(tr);
 
-                // 支出のみ円グラフ用のデータに集計する
+                // 支出のみ円グラフ用のデータに集計
                 if (item.type === 'expense') {
                     chartLabels.push(item.category);
                     chartData.push(item.amount);
@@ -365,7 +404,7 @@
             balanceEl.textContent = `¥${balance.toLocaleString()}`;
             balanceEl.className = `amount ${balance >= 0 ? 'income-text' : 'expense-text'}`;
 
-            // グラフの描画更新
+            // グラフの更新
             updateChart(chartLabels, chartData);
         }
 
@@ -382,7 +421,7 @@
                     datasets: [{
                         data: data,
                         backgroundColor: [
-                            '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#ec4899', '#84cc16'
+                            '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#ec4899', '#84cc16', '#a855f7'
                         ]
                     }]
                 },
@@ -404,6 +443,7 @@
         monthFilter.addEventListener('change', render);
 
         function escapeHTML(str) {
+            if (!str) return '';
             return str.replace(/[&<>'"]/g, 
                 tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
             );

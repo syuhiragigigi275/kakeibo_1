@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>シンプル家計簿アプリ</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-color: #4f46e5;
@@ -140,6 +141,12 @@
             font-size: 12px;
         }
 
+        .chart-container {
+            position: relative;
+            max-width: 350px;
+            margin: 20px auto 0 auto;
+        }
+
         @media (max-width: 600px) {
             form {
                 grid-template-columns: 1fr;
@@ -196,6 +203,24 @@
         </div>
 
         <div class="card">
+            <h3>分類ごとの内訳（今月）</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>区分</th>
+                        <th>分類</th>
+                        <th>合計金額</th>
+                    </tr>
+                </thead>
+                <tbody id="category-summary-list">
+                    </tbody>
+            </table>
+            <div class="chart-container">
+                <canvas id="expenseChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
             <div class="filter-container">
                 <h3>履歴一覧</h3>
                 <div>
@@ -212,7 +237,7 @@
                         <th>金額</th>
                         <th>操作</th>
                     </tr>
-                K</tr>
+                </thead>
                 <tbody id="transaction-list">
                     </tbody>
             </table>
@@ -220,7 +245,6 @@
     </div>
 
     <script>
-        // ローカルストレージからデータを取得（なければ空配列）
         let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 
         const form = document.getElementById('transaction-form');
@@ -229,18 +253,19 @@
         const categoryInput = document.getElementById('category');
         const amountInput = document.getElementById('amount');
         const transactionList = document.getElementById('transaction-list');
+        const categorySummaryList = document.getElementById('category-summary-list');
         const totalIncomeEl = document.getElementById('total-income');
         const totalExpenseEl = document.getElementById('total-expense');
         const balanceEl = document.getElementById('balance');
         const monthFilter = document.getElementById('month-filter');
 
-        // デフォルトで今日の日付と今月をセット
+        let expenseChart = null;
+
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
         const currentMonthStr = today.slice(0, 7);
         monthFilter.value = currentMonthStr;
 
-        // フォーム送信時の処理
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -259,34 +284,31 @@
             typeInput.value = 'expense';
         });
 
-        // データの保存と画面の再描画
         function saveAndRender() {
             localStorage.setItem('transactions', JSON.stringify(transactions));
             render();
         }
 
-        // データの削除
         function deleteTransaction(id) {
             transactions = transactions.filter(t => t.id !== id);
             saveAndRender();
         }
 
-        // 画面描画関数
         function render() {
             transactionList.innerHTML = '';
+            categorySummaryList.innerHTML = '';
             const selectedMonth = monthFilter.value;
 
-            // 月でフィルタリング
             const filteredTransactions = transactions.filter(t => {
                 if (!selectedMonth) return true;
                 return t.date.startsWith(selectedMonth);
             });
 
-            // 日付順にソート（新しい順）
             filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
             let totalIncome = 0;
             let totalExpense = 0;
+            const categoryTotals = {};
 
             filteredTransactions.forEach(t => {
                 if (t.type === 'income') {
@@ -295,6 +317,14 @@
                     totalExpense += t.amount;
                 }
 
+                // 分類ごとの集計キー（区分_分類）
+                const key = `${t.type}_${t.category}`;
+                if (!categoryTotals[key]) {
+                    categoryTotals[key] = { type: t.type, category: t.category, amount: 0 };
+                }
+                categoryTotals[key].amount += t.amount;
+
+                // 履歴一覧の描画
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${t.date}</td>
@@ -306,25 +336,79 @@
                 transactionList.appendChild(tr);
             });
 
-            const balance = totalIncome - totalExpense;
+            // 分類別内訳テーブルの描画
+            const categoryValues = Object.values(categoryTotals);
+            categoryValues.sort((a, b) => b.amount - a.amount);
 
+            let chartLabels = [];
+            let chartData = [];
+
+            categoryValues.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="${item.type === 'income' ? 'income-text' : 'expense-text'}">${item.type === 'income' ? '収入' : '支出'}</span></td>
+                    <td>${escapeHTML(item.category)}</td>
+                    <td class="${item.type === 'income' ? 'income-text' : 'expense-text'}">¥${item.amount.toLocaleString()}</td>
+                `;
+                categorySummaryList.appendChild(tr);
+
+                // 支出のみ円グラフ用のデータに集計する
+                if (item.type === 'expense') {
+                    chartLabels.push(item.category);
+                    chartData.push(item.amount);
+                }
+            });
+
+            const balance = totalIncome - totalExpense;
             totalIncomeEl.textContent = `¥${totalIncome.toLocaleString()}`;
             totalExpenseEl.textContent = `¥${totalExpense.toLocaleString()}`;
             balanceEl.textContent = `¥${balance.toLocaleString()}`;
             balanceEl.className = `amount ${balance >= 0 ? 'income-text' : 'expense-text'}`;
+
+            // グラフの描画更新
+            updateChart(chartLabels, chartData);
         }
 
-        // 月フィルター変更時
+        function updateChart(labels, data) {
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            if (expenseChart) {
+                expenseChart.destroy();
+            }
+
+            expenseChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#ec4899', '#84cc16'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: '支出の分類別割合'
+                        }
+                    }
+                }
+            });
+        }
+
         monthFilter.addEventListener('change', render);
 
-        // XSS対策の簡易エスケープ
         function escapeHTML(str) {
             return str.replace(/[&<>'"]/g, 
                 tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
             );
         }
 
-        // 初回描画
         render();
     </script>
 </body>

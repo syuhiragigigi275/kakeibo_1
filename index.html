@@ -87,7 +87,7 @@
 
         .account-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 10px;
             margin-top: 10px;
         }
@@ -101,13 +101,13 @@
         }
 
         .account-box .name {
-            font-size: 13px;
+            font-size: 12px;
             color: #0369a1;
             font-weight: bold;
         }
 
         .account-box .balance {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             margin-top: 4px;
         }
@@ -253,7 +253,7 @@
             </div>
         </div>
 
-        <!-- 口座残高一覧 (複数口座対応) -->
+        <!-- 口座残高一覧 -->
         <div class="card">
             <h3>💳 口座・資産残高一覧</h3>
             <div id="account-list" class="account-grid">
@@ -261,7 +261,7 @@
             </div>
         </div>
 
-        <!-- 入力フォーム (タブ切り替え：収支 or 口座間移動) -->
+        <!-- 入力フォーム -->
         <div class="card">
             <div class="tab-buttons">
                 <button class="tab-btn active" id="tab-transaction" onclick="switchTab('transaction')">収支を記録</button>
@@ -283,21 +283,18 @@
                 </div>
                 <div class="form-group">
                     <label for="account">利用口座</label>
-                    <select id="account" required>
-                        <!-- 動的挿入 -->
-                    </select>
+                    <select id="account" required></select>
                 </div>
                 <div class="form-group">
                     <label for="category">分類</label>
-                    <select id="category">
-                        <!-- 動的挿入 -->
-                    </select>
+                    <select id="category"></select>
                 </div>
                 <div class="form-group">
                     <label for="pay-method">支払方法</label>
                     <select id="pay-method">
                         <option value="現金">現金</option>
-                        <option value="クレジットカード">クレジットカード</option>
+                        <option value="Olive">Olive</option>
+                        <option value="楽天カード">楽天カード</option>
                         <option value="PayPay">PayPay</option>
                         <option value="Suica/IC">Suica/ICカード</option>
                         <option value="その他">その他</option>
@@ -314,7 +311,7 @@
                 <button type="submit">追加する</button>
             </form>
 
-            <!-- 口座移動フォーム (初期状態は非表示) -->
+            <!-- 口座間移動フォーム -->
             <form id="transfer-form" style="display: none;">
                 <div class="form-group">
                     <label for="transfer-date">日付</label>
@@ -330,7 +327,7 @@
                 </div>
                 <div class="form-group">
                     <label for="transfer-memo">メモ</label>
-                    <input type="text" id="transfer-memo" placeholder="例: Suicaチャージ">
+                    <input type="text" id="transfer-memo" placeholder="例: 証券口座へ入金">
                 </div>
                 <div class="form-group">
                     <label for="transfer-amount">金額 (円)</label>
@@ -385,14 +382,16 @@
     </div>
 
     <script>
-        // ローカルストレージデータの読み込み
         let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
         
-        // 口座初期データ（ユーザーが3つの口座を持っている前提で初期設定。後で自由に変更・追加も可能）
+        // 専用口座リストの定義
         let accounts = JSON.parse(localStorage.getItem('accounts')) || [
-            { id: 'acc1', name: '銀行口座A (メイン)', initialBalance: 100000 },
-            { id: 'acc2', name: '銀行口座B (貯金)', initialBalance: 300000 },
-            { id: 'acc3', name: '現金・財布', initialBalance: 15000 }
+            { id: 'acc_mizuho', name: 'みずほ銀行', initialBalance: 0 },
+            { id: 'acc_smbc', name: '三井住友銀行', initialBalance: 0 },
+            { id: 'acc_mizuho_smitate', name: 'みずほ銀行(積立)', initialBalance: 0 },
+            { id: 'acc_paypay', name: 'PayPay', initialBalance: 0 },
+            { id: 'acc_rakuten_sec', name: '楽天証券', initialBalance: 0 },
+            { id: 'acc_cash', name: '現金・財布', initialBalance: 0 }
         ];
 
         const form = document.getElementById('transaction-form');
@@ -425,16 +424,13 @@
             income: ['給与', '賞与', '副業', 'お小遣い', 'その他']
         };
 
-        // 初期日付のセット
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
         transferDateInput.value = today;
         const currentMonthStr = today.slice(0, 7);
         monthFilter.value = currentMonthStr;
 
-        // セレクトボックスの選択肢更新
         function updateSelectOptions() {
-            // 分類
             const type = typeInput.value;
             categoryInput.innerHTML = '';
             categories[type].forEach(cat => {
@@ -444,7 +440,6 @@
                 categoryInput.appendChild(opt);
             });
 
-            // 口座一覧
             accountInput.innerHTML = '';
             fromAccountInput.innerHTML = '';
             toAccountInput.innerHTML = '';
@@ -465,7 +460,6 @@
         typeInput.addEventListener('change', updateSelectOptions);
         updateSelectOptions();
 
-        // タブ切り替え関数
         function switchTab(mode) {
             const tabTrans = document.getElementById('tab-transaction');
             const tabTransfer = document.getElementById('tab-transfer');
@@ -482,7 +476,6 @@
             }
         }
 
-        // 収支データの追加
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             const newTransaction = {
@@ -504,7 +497,6 @@
             updateSelectOptions();
         });
 
-        // 口座間移動データの追加
         transferForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const fromId = fromAccountInput.value;
@@ -548,13 +540,11 @@
             accountListEl.innerHTML = '';
             const selectedMonth = monthFilter.value;
 
-            // 口座ごとの残高計算（初期残高 ＋ 全期間の収支・移動を反映）
             const accountBalances = {};
             accounts.forEach(acc => {
                 accountBalances[acc.id] = acc.initialBalance;
             });
 
-            // 全期間の履歴から口座残高を計算
             transactions.forEach(t => {
                 if (!t.isTransfer) {
                     if (t.type === 'income') {
@@ -568,7 +558,6 @@
                 }
             });
 
-            // 口座残高カードの描画
             accounts.forEach(acc => {
                 const currentBal = accountBalances[acc.id] || 0;
                 const box = document.createElement('div');
@@ -580,7 +569,6 @@
                 accountListEl.appendChild(box);
             });
 
-            // 選択月のフィルター
             const filteredTransactions = transactions.filter(t => {
                 if (!selectedMonth) return true;
                 return t.date.startsWith(selectedMonth);
@@ -621,7 +609,6 @@
                         <td><button class="delete-btn" onclick="deleteTransaction(${t.id})">削除</button></td>
                     `;
                 } else {
-                    // 口座移動の表示
                     const fromObj = accounts.find(a => a.id === t.fromId);
                     const toObj = accounts.find(a => a.id === t.toId);
                     const fromName = fromObj ? fromObj.name : '不明';
@@ -640,7 +627,6 @@
                 transactionList.appendChild(tr);
             });
 
-            // 分類別内訳テーブル
             const categoryValues = Object.values(categoryTotals);
             categoryValues.sort((a, b) => b.amount - a.amount);
 

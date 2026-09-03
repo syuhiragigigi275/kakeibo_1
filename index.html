@@ -12,7 +12,7 @@
             --success-color: #059669;
             --danger-color: #e11d48;
             --bg-color: #0f172a;
-            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-bg: rgba(255, 255, 255, 0.95);
             --text-color: #0f172a;
         }
 
@@ -22,21 +22,59 @@
             background-attachment: fixed;
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             min-height: 100vh;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 800px;
             margin: 0 auto;
+            padding-bottom: 40px;
         }
 
         h1 {
             text-align: center;
             color: #e0f2fe;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             letter-spacing: 1px;
+            font-size: 24px;
+        }
+
+        /* メインの画面切り替え用タブナビゲーション（スマホで超快適） */
+        .main-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .main-tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: #e0f2fe;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 12px 5px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .main-tab-btn.active {
+            background: #ffffff;
+            color: var(--primary-color);
+            border-color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .card {
@@ -54,40 +92,41 @@
             border-bottom: 2px solid #e0f2fe;
             padding-bottom: 8px;
             margin-top: 0;
+            font-size: 16px;
         }
 
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 10px;
             text-align: center;
             margin-bottom: 20px;
         }
 
         .summary-card {
             background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
+            padding: 12px 8px;
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             border-top: 4px solid var(--primary-color);
         }
 
         .summary-card h3 {
-            margin: 0 0 8px 0;
-            font-size: 14px;
+            margin: 0 0 6px 0;
+            font-size: 12px;
             color: #64748b;
             border: none;
             padding: 0;
         }
 
         .summary-card .amount {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
         }
 
         .account-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 10px;
             margin-top: 10px;
         }
@@ -116,10 +155,9 @@
         .expense-text { color: var(--danger-color); }
 
         form {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) 1fr auto;
-            gap: 10px;
-            align-items: end;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .form-group {
@@ -135,7 +173,7 @@
         }
 
         input, select, button {
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             font-size: 14px;
@@ -159,26 +197,28 @@
 
         button:hover {
             opacity: 0.9;
-            transform: translateY(-1px);
         }
 
-        .tab-buttons {
+        /* フォーム内のサブタブ */
+        .sub-tab-buttons {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
-        .tab-btn {
+        .sub-tab-btn {
             background: #cbd5e1;
             color: #334155;
             border: none;
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 13px;
+            flex: 1;
         }
 
-        .tab-btn.active {
+        .sub-tab-btn.active {
             background: #0284c7;
             color: white;
         }
@@ -188,6 +228,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         table {
@@ -197,10 +239,10 @@
         }
 
         th, td {
-            padding: 12px;
+            padding: 10px 8px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         th {
@@ -209,26 +251,35 @@
             font-weight: 600;
         }
 
+        .action-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .edit-btn {
+            background: #0284c7;
+            padding: 6px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
         .delete-btn {
             background: #e11d48;
-            padding: 6px 10px;
-            font-size: 12px;
-            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 11px;
+            border-radius: 4px;
         }
 
         .chart-container {
             position: relative;
-            max-width: 350px;
-            margin: 20px auto 0 auto;
+            max-width: 320px;
+            margin: 15px auto 0 auto;
         }
 
-        @media (max-width: 700px) {
-            form {
-                grid-template-columns: 1fr;
-            }
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
+        #cancel-edit-btn {
+            background: #64748b;
+            display: none;
+            margin-top: 6px;
         }
     </style>
 </head>
@@ -237,154 +288,174 @@
     <div class="container">
         <h1>🐬 アクアリウム家計簿 🐠</h1>
 
-        <!-- サマリー表示 -->
-        <div class="summary-grid">
-            <div class="summary-card">
-                <h3>今月の収入</h3>
-                <div id="total-income" class="amount income-text">¥0</div>
-            </div>
-            <div class="summary-card">
-                <h3>今月の支出</h3>
-                <div id="total-expense" class="amount expense-text">¥0</div>
-            </div>
-            <div class="summary-card">
-                <h3>今月の収支</h3>
-                <div id="balance" class="amount">¥0</div>
+        <!-- メイン画面切り替えタブ -->
+        <div class="main-tabs">
+            <button class="main-tab-btn active" onclick="switchMainTab('tab-input', this)">📝 入力</button>
+            <button class="main-tab-btn" onclick="switchMainTab('tab-list', this)">📋 履歴一覧</button>
+            <button class="main-tab-btn" onclick="switchMainTab('tab-analytics', this)">📊 グラフ・口座</button>
+        </div>
+
+        <!-- ================= タブ1：入力画面 ================= -->
+        <div id="tab-input" class="tab-content active">
+            <div class="card">
+                <h3 id="form-title">新規データの追加</h3>
+                
+                <div class="sub-tab-buttons" id="form-type-tabs">
+                    <button class="sub-tab-btn active" id="sub-trans" onclick="switchSubForm('transaction')">収支</button>
+                    <button class="sub-tab-btn" id="sub-trf" onclick="switchSubForm('transfer')">口座間移動</button>
+                </div>
+
+                <!-- 収支入力フォーム -->
+                <form id="transaction-form">
+                    <input type="hidden" id="edit-id" value="">
+                    <div class="form-group">
+                        <label for="type">区分</label>
+                        <select id="type">
+                            <option value="expense">支出</option>
+                            <option value="income">収入</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="date">日付</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="account">利用口座</label>
+                        <select id="account" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">分類</label>
+                        <select id="category"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pay-method">支払方法</label>
+                        <select id="pay-method">
+                            <option value="現金">現金</option>
+                            <option value="Olive">Olive</option>
+                            <option value="楽天カード">楽天カード</option>
+                            <option value="PayPay">PayPay</option>
+                            <option value="Suica/IC">Suica/ICカード</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="memo">内容・メモ</label>
+                        <input type="text" id="memo" placeholder="例: スーパー, カフェなど">
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">金額 (円)</label>
+                        <input type="number" id="amount" placeholder="例: 1500" required min="1">
+                    </div>
+                    <button type="submit" id="submit-btn">追加する</button>
+                    <button type="button" id="cancel-edit-btn" onclick="cancelEdit()">編集をキャンセル</button>
+                </form>
+
+                <!-- 口座間移動フォーム -->
+                <form id="transfer-form" style="display: none;">
+                    <div class="form-group">
+                        <label for="transfer-date">日付</label>
+                        <input type="date" id="transfer-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="from-account">移動元 (出金)</label>
+                        <select id="from-account" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="to-account">移動先 (入金)</label>
+                        <select id="to-account" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transfer-memo">メモ</label>
+                        <input type="text" id="transfer-memo" placeholder="例: 証券口座へ入金">
+                    </div>
+                    <div class="form-group">
+                        <label for="transfer-amount">金額 (円)</label>
+                        <input type="number" id="transfer-amount" placeholder="例: 5000" required min="1">
+                    </div>
+                    <button type="submit">移動する</button>
+                </form>
             </div>
         </div>
 
-        <!-- 口座残高一覧 -->
-        <div class="card">
-            <h3>💳 口座・資産残高一覧</h3>
-            <div id="account-list" class="account-grid">
-                <!-- JavaScriptで動的挿入 -->
+        <!-- ================= タブ2：履歴一覧画面 ================= -->
+        <div id="tab-list" class="tab-content">
+            <div class="card">
+                <div class="filter-container">
+                    <h3>📋 履歴一覧</h3>
+                    <div>
+                        <label for="month-filter">月選択: </label>
+                        <input type="month" id="month-filter">
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日付</th>
+                                <th>区分</th>
+                                <th>口座</th>
+                                <th>分類 / 支払</th>
+                                <th>内容</th>
+                                <th>金額</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-list"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- 入力フォーム -->
-        <div class="card">
-            <div class="tab-buttons">
-                <button class="tab-btn active" id="tab-transaction" onclick="switchTab('transaction')">収支を記録</button>
-                <button class="tab-btn" id="tab-transfer" onclick="switchTab('transfer')">口座間移動 (チャージ等)</button>
+        <!-- ================= タブ3：グラフ・口座画面 ================= -->
+        <div id="tab-analytics" class="tab-content">
+            <!-- サマリー表示 -->
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>今月の収入</h3>
+                    <div id="total-income" class="amount income-text">¥0</div>
+                </div>
+                <div class="summary-card">
+                    <h3>今月の支出</h3>
+                    <div id="total-expense" class="amount expense-text">¥0</div>
+                </div>
+                <div class="summary-card">
+                    <h3>今月の収支</h3>
+                    <div id="balance" class="amount">¥0</div>
+                </div>
             </div>
 
-            <!-- 収支入力フォーム -->
-            <form id="transaction-form">
-                <div class="form-group">
-                    <label for="type">区分</label>
-                    <select id="type">
-                        <option value="expense">支出</option>
-                        <option value="income">収入</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="date">日付</label>
-                    <input type="date" id="date" required>
-                </div>
-                <div class="form-group">
-                    <label for="account">利用口座</label>
-                    <select id="account" required></select>
-                </div>
-                <div class="form-group">
-                    <label for="category">分類</label>
-                    <select id="category"></select>
-                </div>
-                <div class="form-group">
-                    <label for="pay-method">支払方法</label>
-                    <select id="pay-method">
-                        <option value="現金">現金</option>
-                        <option value="Olive">Olive</option>
-                        <option value="楽天カード">楽天カード</option>
-                        <option value="PayPay">PayPay</option>
-                        <option value="Suica/IC">Suica/ICカード</option>
-                        <option value="その他">その他</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="memo">内容・メモ</label>
-                    <input type="text" id="memo" placeholder="例: スーパー, カフェなど">
-                </div>
-                <div class="form-group">
-                    <label for="amount">金額 (円)</label>
-                    <input type="number" id="amount" placeholder="例: 1500" required min="1">
-                </div>
-                <button type="submit">追加する</button>
-            </form>
+            <!-- 口座残高一覧 -->
+            <div class="card">
+                <h3>💳 口座・資産残高一覧</h3>
+                <div id="account-list" class="account-grid"></div>
+            </div>
 
-            <!-- 口座間移動フォーム -->
-            <form id="transfer-form" style="display: none;">
-                <div class="form-group">
-                    <label for="transfer-date">日付</label>
-                    <input type="date" id="transfer-date" required>
+            <!-- 分類別内訳 ＆ グラフ -->
+            <div class="card">
+                <h3>🌊 分類ごとの内訳（今月）</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>区分</th>
+                                <th>分類</th>
+                                <th>合計金額</th>
+                            </tr>
+                        </thead>
+                        <tbody id="category-summary-list"></tbody>
+                    </table>
                 </div>
-                <div class="form-group">
-                    <label for="from-account">移動元 (出金)</label>
-                    <select id="from-account" required></select>
+                <div class="chart-container">
+                    <canvas id="expenseChart"></canvas>
                 </div>
-                <div class="form-group">
-                    <label for="to-account">移動先 (入金)</label>
-                    <select id="to-account" required></select>
-                </div>
-                <div class="form-group">
-                    <label for="transfer-memo">メモ</label>
-                    <input type="text" id="transfer-memo" placeholder="例: 証券口座へ入金">
-                </div>
-                <div class="form-group">
-                    <label for="transfer-amount">金額 (円)</label>
-                    <input type="number" id="transfer-amount" placeholder="例: 5000" required min="1">
-                </div>
-                <button type="submit">移動する</button>
-            </form>
-        </div>
-
-        <!-- 分類別内訳 ＆ グラフ -->
-        <div class="card">
-            <h3>🌊 分類ごとの内訳（今月）</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>区分</th>
-                        <th>分類</th>
-                        <th>合計金額</th>
-                    </tr>
-                </thead>
-                <tbody id="category-summary-list"></tbody>
-            </table>
-            <div class="chart-container">
-                <canvas id="expenseChart"></canvas>
             </div>
         </div>
 
-        <!-- 一覧・フィルター -->
-        <div class="card">
-            <div class="filter-container">
-                <h3>📋 履歴一覧</h3>
-                <div>
-                    <label for="month-filter">月選択: </label>
-                    <input type="month" id="month-filter">
-                </div>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>日付</th>
-                        <th>区分</th>
-                        <th>口座</th>
-                        <th>分類 / 支払</th>
-                        <th>内容</th>
-                        <th>金額</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="transaction-list"></tbody>
-            </table>
-        </div>
     </div>
 
     <script>
         let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
         
-        // 専用口座リストの定義
         let accounts = JSON.parse(localStorage.getItem('accounts')) || [
             { id: 'acc_mizuho', name: 'みずほ銀行', initialBalance: 0 },
             { id: 'acc_smbc', name: '三井住友銀行', initialBalance: 0 },
@@ -396,6 +467,12 @@
 
         const form = document.getElementById('transaction-form');
         const transferForm = document.getElementById('transfer-form');
+        const editIdInput = document.getElementById('edit-id');
+        const formTitle = document.getElementById('form-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const formTypeTabs = document.getElementById('form-type-tabs');
+
         const typeInput = document.getElementById('type');
         const dateInput = document.getElementById('date');
         const transferDateInput = document.getElementById('transfer-date');
@@ -430,6 +507,32 @@
         const currentMonthStr = today.slice(0, 7);
         monthFilter.value = currentMonthStr;
 
+        // メイン画面のタブ切り替え
+        function switchMainTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // 入力フォーム内のサブタブ切り替え（収支 ⇔ 口座間移動）
+        function switchSubForm(mode) {
+            const subTrans = document.getElementById('sub-trans');
+            const subTrf = document.getElementById('sub-trf');
+            if (mode === 'transaction') {
+                subTrans.className = 'sub-tab-btn active';
+                subTrf.className = 'sub-tab-btn';
+                form.style.display = 'flex';
+                transferForm.style.display = 'none';
+            } else {
+                subTrans.className = 'sub-tab-btn';
+                subTrf.className = 'sub-tab-btn active';
+                form.style.display = 'none';
+                transferForm.style.display = 'flex';
+            }
+        }
+
         function updateSelectOptions() {
             const type = typeInput.value;
             categoryInput.innerHTML = '';
@@ -460,43 +563,54 @@
         typeInput.addEventListener('change', updateSelectOptions);
         updateSelectOptions();
 
-        function switchTab(mode) {
-            const tabTrans = document.getElementById('tab-transaction');
-            const tabTransfer = document.getElementById('tab-transfer');
-            if (mode === 'transaction') {
-                tabTrans.className = 'tab-btn active';
-                tabTransfer.className = 'tab-btn';
-                form.style.display = 'grid';
-                transferForm.style.display = 'none';
-            } else {
-                tabTrans.className = 'tab-btn';
-                tabTransfer.className = 'tab-btn active';
-                form.style.display = 'none';
-                transferForm.style.display = 'grid';
-            }
-        }
-
+        // 収支データの追加・編集送信
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            const newTransaction = {
-                id: Date.now(),
-                isTransfer: false,
-                type: typeInput.value,
-                date: dateInput.value,
-                accountId: accountInput.value,
-                category: categoryInput.value,
-                payMethod: payMethodInput.value,
-                memo: memoInput.value.trim() || '-',
-                amount: Number(amountInput.value)
-            };
-            transactions.push(newTransaction);
+            const editId = editIdInput.value;
+
+            if (editId) {
+                // 編集モードの場合：既存データを更新
+                transactions = transactions.map(t => {
+                    if (t.id === Number(editId)) {
+                        return {
+                            id: Number(editId),
+                            isTransfer: false,
+                            type: typeInput.value,
+                            date: dateInput.value,
+                            accountId: accountInput.value,
+                            category: categoryInput.value,
+                            payMethod: payMethodInput.value,
+                            memo: memoInput.value.trim() || '-',
+                            amount: Number(amountInput.value)
+                        };
+                    }
+                    return t;
+                });
+                cancelEdit();
+            } else {
+                // 新規追加モード
+                const newTransaction = {
+                    id: Date.now(),
+                    isTransfer: false,
+                    type: typeInput.value,
+                    date: dateInput.value,
+                    accountId: accountInput.value,
+                    category: categoryInput.value,
+                    payMethod: payMethodInput.value,
+                    memo: memoInput.value.trim() || '-',
+                    amount: Number(amountInput.value)
+                };
+                transactions.push(newTransaction);
+                form.reset();
+                dateInput.value = today;
+                typeInput.value = 'expense';
+                updateSelectOptions();
+            }
+
             saveAndRender();
-            form.reset();
-            dateInput.value = today;
-            typeInput.value = 'expense';
-            updateSelectOptions();
         });
 
+        // 口座間移動データの追加
         transferForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const fromId = fromAccountInput.value;
@@ -523,6 +637,47 @@
             updateSelectOptions();
         });
 
+        // 編集モードを開始する関数
+        function editTransaction(id) {
+            const t = transactions.find(item => item.id === id);
+            if (!t || t.isTransfer) return;
+
+            // 入力タブに切り替え
+            switchMainTab('tab-input', document.querySelectorAll('.main-tab-btn')[0]);
+            switchSubForm('transaction');
+
+            // フォームに値をセット
+            editIdInput.value = t.id;
+            typeInput.value = t.type;
+            updateSelectOptions();
+            dateInput.value = t.date;
+            accountInput.value = t.accountId;
+            categoryInput.value = t.category;
+            payMethodInput.value = t.payMethod;
+            memoInput.value = t.memo === '-' ? '' : t.memo;
+            amountInput.value = t.amount;
+
+            // UI変更
+            formTitle.textContent = 'データの編集';
+            submitBtn.textContent = '更新する';
+            cancelEditBtn.style.display = 'block';
+            formTypeTabs.style.display = 'none'; // 編集時は収支固定
+        }
+
+        // 編集をキャンセルする関数
+        function cancelEdit() {
+            editIdInput.value = '';
+            form.reset();
+            dateInput.value = today;
+            typeInput.value = 'expense';
+            updateSelectOptions();
+
+            formTitle.textContent = '新規データの追加';
+            submitBtn.textContent = '追加する';
+            cancelEditBtn.style.display = 'none';
+            formTypeTabs.style.display = 'flex';
+        }
+
         function saveAndRender() {
             localStorage.setItem('transactions', JSON.stringify(transactions));
             localStorage.setItem('accounts', JSON.stringify(accounts));
@@ -530,8 +685,10 @@
         }
 
         function deleteTransaction(id) {
-            transactions = transactions.filter(t => t.id !== id);
-            saveAndRender();
+            if (confirm('本当にこの記録を削除しますか？')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveAndRender();
+            }
         }
 
         function render() {
@@ -603,10 +760,15 @@
                         <td>${t.date}</td>
                         <td><span class="${t.type === 'income' ? 'income-text' : 'expense-text'}">${t.type === 'income' ? '収入' : '支出'}</span></td>
                         <td>${escapeHTML(accName)}</td>
-                        <td><b>${escapeHTML(t.category)}</b><br><small style="color:#64748b;">支払: ${escapeHTML(t.payMethod)}</small></td>
+                        <td><b>${escapeHTML(t.category)}</b><br><small style="color:#64748b;">${escapeHTML(t.payMethod)}</small></td>
                         <td>${escapeHTML(t.memo)}</td>
                         <td class="${t.type === 'income' ? 'income-text' : 'expense-text'}">${t.type === 'income' ? '+' : '-'}¥${t.amount.toLocaleString()}</td>
-                        <td><button class="delete-btn" onclick="deleteTransaction(${t.id})">削除</button></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="edit-btn" onclick="editTransaction(${t.id})">編集</button>
+                                <button class="delete-btn" onclick="deleteTransaction(${t.id})">削除</button>
+                            </div>
+                        </td>
                     `;
                 } else {
                     const fromObj = accounts.find(a => a.id === t.fromId);
@@ -616,12 +778,16 @@
 
                     tr.innerHTML = `
                         <td>${t.date}</td>
-                        <td><span style="color: #0284c7; font-weight: bold;">口座移動</span></td>
+                        <td><span style="color: #0284c7; font-weight: bold;">移動</span></td>
                         <td>-</td>
                         <td><b>${escapeHTML(fromName)} ➔ ${escapeHTML(toName)}</b></td>
                         <td>${escapeHTML(t.memo)}</td>
                         <td style="color: #0284c7;">±¥${t.amount.toLocaleString()}</td>
-                        <td><button class="delete-btn" onclick="deleteTransaction(${t.id})">削除</button></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="delete-btn" onclick="deleteTransaction(${t.id})">削除</button>
+                            </div>
+                        </td>
                     `;
                 }
                 transactionList.appendChild(tr);

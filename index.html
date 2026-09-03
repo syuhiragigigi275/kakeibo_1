@@ -41,7 +41,6 @@
             font-size: 24px;
         }
 
-        /* メインの画面切り替え用タブナビゲーション（4つに拡張） */
         .main-tabs {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -291,10 +290,6 @@
         .btn-success {
             background: linear-gradient(135deg, #059669 0%, #047857 100%);
         }
-
-        .btn-warning {
-            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-        }
     </style>
 </head>
 <body>
@@ -335,7 +330,7 @@
                         <input type="date" id="date" required>
                     </div>
                     <div class="form-group">
-                        <label for="account">利用口座</label>
+                        <label for="account">利用口座 / 決済元</label>
                         <select id="account" required></select>
                     </div>
                     <div class="form-group">
@@ -343,7 +338,7 @@
                         <select id="category"></select>
                     </div>
                     <div class="form-group">
-                        <label for="pay-method">支払方法</label>
+                        <label for="pay-method">支払方法メモ</label>
                         <select id="pay-method">
                             <option value="現金">現金</option>
                             <option value="Olive">Olive</option>
@@ -372,20 +367,20 @@
                         <input type="date" id="transfer-date" required>
                     </div>
                     <div class="form-group">
-                        <label for="from-account">移動元 (出金)</label>
+                        <label for="from-account">移動元 (出金・口座等)</label>
                         <select id="from-account" required></select>
                     </div>
                     <div class="form-group">
-                        <label for="to-account">移動先 (入金)</label>
+                        <label for="to-account">移動先 (入金・カード引き落とし等)</label>
                         <select id="to-account" required></select>
                     </div>
                     <div class="form-group">
                         <label for="transfer-memo">メモ</label>
-                        <input type="text" id="transfer-memo" placeholder="例: 証券口座へ入金">
+                        <input type="text" id="transfer-memo" placeholder="例: Olive代金引き落とし">
                     </div>
                     <div class="form-group">
                         <label for="transfer-amount">金額 (円)</label>
-                        <input type="number" id="transfer-amount" placeholder="例: 5000" required min="1">
+                        <input type="number" id="transfer-amount" placeholder="例: 15000" required min="1">
                     </div>
                     <button type="submit">移動する</button>
                 </form>
@@ -470,22 +465,19 @@
         <div id="tab-settings" class="tab-content">
             <!-- 初期残高の編集カード -->
             <div class="card">
-                <h3>⚙️ 口座の初期残高設定</h3>
-                <p style="font-size: 12px; color: #64748b; margin-top: 0;">各口座のスタート時の金額を自由に変更できます。</p>
-                <div id="initial-balance-settings" style="display: flex; flex-direction: column; gap: 10px;">
-                    <!-- 動的挿入 -->
-                </div>
-                <button type="button" class="btn-success" onclick="saveInitialBalances()" style="margin-top: 15px;">初期残高を保存する</button>
+                <h3>⚙️ 口座・カード初期残高設定</h3>
+                <p style="font-size: 12px; color: #64748b; margin-top: 0;">カードの未払い分などはマイナスで設定すると正確に管理できます。</p>
+                <div id="initial-balance-settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                <button type="button" class="btn-success" onclick="saveInitialBalances()" style="margin-top: 15px;">設定を保存する</button>
             </div>
 
             <!-- データバックアップ・復元カード -->
             <div class="card">
                 <h3>💾 データのバックアップ・復元</h3>
-                <p style="font-size: 12px; color: #64748b; margin-top: 0;">機種変更やキャッシュクリア対策として、データをファイルに保存したり復元できます。</p>
                 <div class="backup-section">
                     <button type="button" class="btn-success" onclick="exportData()">データをエクスポート（保存）</button>
                     <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 10px;">
-                        <label for="import-file" style="font-size: 12px; font-weight: bold; color: #334155;">バックアップファイルから復元:</label>
+                        <label for="import-file" style="font-size: 12px; font-weight: bold; color: #334155;">復元ファイル選択:</label>
                         <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="background: #fff;">
                     </div>
                 </div>
@@ -497,13 +489,16 @@
     <script>
         let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
         
+        // デフォルト口座に「Olive」と「楽天カード」を追加
         let accounts = JSON.parse(localStorage.getItem('accounts')) || [
             { id: 'acc_mizuho', name: 'みずほ銀行', initialBalance: 0 },
             { id: 'acc_smbc', name: '三井住友銀行', initialBalance: 0 },
             { id: 'acc_mizuho_smitate', name: 'みずほ銀行(積立)', initialBalance: 0 },
             { id: 'acc_paypay', name: 'PayPay', initialBalance: 0 },
             { id: 'acc_rakuten_sec', name: '楽天証券', initialBalance: 0 },
-            { id: 'acc_cash', name: '現金・財布', initialBalance: 0 }
+            { id: 'acc_cash', name: '現金・財布', initialBalance: 0 },
+            { id: 'acc_olive', name: 'Olive(カード)', initialBalance: 0 },
+            { id: 'acc_rakuten_card', name: '楽天カード', initialBalance: 0 }
         ];
 
         const form = document.getElementById('transaction-form');
@@ -725,21 +720,19 @@
             }
         }
 
-        // 初期残高設定フォームの描画
         function renderSettings() {
             initialBalanceSettingsEl.innerHTML = '';
             accounts.forEach(acc => {
                 const div = document.createElement('div');
                 div.className = 'form-group';
                 div.innerHTML = `
-                    <label>${escapeHTML(acc.name)} の初期残高 (円):</label>
+                    <label>${escapeHTML(acc.name)} 残高 (円):</label>
                     <input type="number" id="init-bal-${acc.id}" value="${acc.initialBalance}">
                 `;
                 initialBalanceSettingsEl.appendChild(div);
             });
         }
 
-        // 初期残高の保存
         function saveInitialBalances() {
             accounts.forEach(acc => {
                 const inputEl = document.getElementById(`init-bal-${acc.id}`);
@@ -751,7 +744,6 @@
             alert('初期残高を保存しました！');
         }
 
-        // データエクスポート（バックアップ）
         function exportData() {
             const dataObj = {
                 transactions: transactions,
@@ -766,7 +758,6 @@
             downloadAnchor.remove();
         }
 
-        // データインポート（復元）
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -955,7 +946,7 @@
         monthFilter.addEventListener('change', render);
 
         function escapeHTML(str) {
-            if (!str) return '';
+            if (!str) return {};
             return str.replace(/[&<>'"]/g, 
                 tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
             );

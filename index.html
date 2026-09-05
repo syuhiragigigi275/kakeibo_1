@@ -269,7 +269,7 @@
 
         .chart-container {
             position: relative;
-            max-width: 320px;
+            max-width: 360px;
             margin: 15px auto 0 auto;
         }
 
@@ -488,7 +488,6 @@
     <script>
         let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
         
-        // 必須の口座・カードマスター
         const defaultAccounts = [
             { id: 'acc_mizuho', name: 'みずほ銀行', initialBalance: 0 },
             { id: 'acc_smbc', name: '三井住友銀行', initialBalance: 0 },
@@ -500,7 +499,6 @@
             { id: 'acc_rakuten_card', name: '楽天カード', initialBalance: 0 }
         ];
 
-        // 既存の保存データを読み込み、足りない口座・カード（Oliveや楽天カード）を自動マージする
         let savedAccounts = JSON.parse(localStorage.getItem('accounts'));
         let accounts = [];
 
@@ -508,7 +506,6 @@
             accounts = defaultAccounts;
         } else {
             accounts = [...savedAccounts];
-            // 既存データの中にOliveや楽天カードが無ければ自動追加する処理
             defaultAccounts.forEach(defAcc => {
                 const exists = accounts.some(a => a.id === defAcc.id || a.name === defAcc.name);
                 if (!exists) {
@@ -516,7 +513,6 @@
                 }
             });
         }
-        // 即座に保存して整合性を保つ
         localStorage.setItem('accounts', JSON.stringify(accounts));
 
         const form = document.getElementById('transaction-form');
@@ -931,14 +927,18 @@
             balanceEl.textContent = `¥${balance.toLocaleString()}`;
             balanceEl.className = `amount ${balance >= 0 ? 'income-text' : 'expense-text'}`;
 
+            // 金額入りグラフ描画へ渡す
             updateChart(chartLabels, chartData);
         }
 
+        // グラフ描画関数（凡例とツールチップに金額とパーセントを反映）
         function updateChart(labels, data) {
             const ctx = document.getElementById('expenseChart').getContext('2d');
             if (expenseChart) {
                 expenseChart.destroy();
             }
+
+            const totalExpense = data.reduce((acc, cur) => acc + cur, 0);
 
             expenseChart = new Chart(ctx, {
                 type: 'doughnut',
@@ -954,8 +954,38 @@
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { position: 'bottom' },
-                        title: { display: true, text: '支出の分類別割合（海洋カラー）' }
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 12,
+                                font: { size: 12 },
+                                // 凡例に「項目名: ¥金額 (割合%)」を表示
+                                generateLabels: function(chart) {
+                                    const original = Chart.overrides.doughnut.plugins.legend.labels.generateLabels(chart);
+                                    return original.map((label, i) => {
+                                        const val = chart.data.datasets[0].data[i];
+                                        const pct = totalExpense > 0 ? ((val / totalExpense) * 100).toFixed(1) : 0;
+                                        label.text = `${label.text}: ¥${val.toLocaleString()} (${pct}%)`;
+                                        return label;
+                                    });
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                // タップした時のポップアップにも金額と割合を表示
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    const pct = totalExpense > 0 ? ((val / totalExpense) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ¥${val.toLocaleString()} (${pct}%)`;
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: '支出の分類別割合（金額・内訳）'
+                        }
                     }
                 }
             });

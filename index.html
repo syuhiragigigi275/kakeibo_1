@@ -296,7 +296,6 @@
     <div class="container">
         <h1>🐬 アクアリウム家計簿 🐠</h1>
 
-        <!-- メイン画面切り替えタブ -->
         <div class="main-tabs">
             <button class="main-tab-btn active" onclick="switchMainTab('tab-input', this)">📝 入力</button>
             <button class="main-tab-btn" onclick="switchMainTab('tab-list', this)">📋 一覧</button>
@@ -304,7 +303,7 @@
             <button class="main-tab-btn" onclick="switchMainTab('tab-settings', this)">⚙️ 設定</button>
         </div>
 
-        <!-- ================= タブ1：入力画面 ================= -->
+        <!-- タブ1：入力画面 -->
         <div id="tab-input" class="tab-content active">
             <div class="card">
                 <h3 id="form-title">新規データの追加</h3>
@@ -314,7 +313,6 @@
                     <button class="sub-tab-btn" id="sub-trf" onclick="switchSubForm('transfer')">口座間移動</button>
                 </div>
 
-                <!-- 収支入力フォーム -->
                 <form id="transaction-form">
                     <input type="hidden" id="edit-id" value="">
                     <div class="form-group">
@@ -359,7 +357,6 @@
                     <button type="button" id="cancel-edit-btn" onclick="cancelEdit()">編集をキャンセル</button>
                 </form>
 
-                <!-- 口座間移動フォーム -->
                 <form id="transfer-form" style="display: none;">
                     <div class="form-group">
                         <label for="transfer-date">日付</label>
@@ -386,7 +383,7 @@
             </div>
         </div>
 
-        <!-- ================= タブ2：履歴一覧画面 ================= -->
+        <!-- タブ2：履歴一覧画面 -->
         <div id="tab-list" class="tab-content">
             <div class="card">
                 <div class="filter-container">
@@ -415,9 +412,8 @@
             </div>
         </div>
 
-        <!-- ================= タブ3：グラフ画面 ================= -->
+        <!-- タブ3：グラフ画面 -->
         <div id="tab-analytics" class="tab-content">
-            <!-- サマリー表示 -->
             <div class="summary-grid">
                 <div class="summary-card">
                     <h3>今月の収入</h3>
@@ -433,13 +429,11 @@
                 </div>
             </div>
 
-            <!-- 口座残高一覧 -->
             <div class="card">
                 <h3>💳 口座・カード残高一覧</h3>
                 <div id="account-list" class="account-grid"></div>
             </div>
 
-            <!-- 分類別内訳 ＆ グラフ -->
             <div class="card">
                 <h3>🌊 分類ごとの内訳（今月）</h3>
                 <div style="overflow-x: auto;">
@@ -460,9 +454,8 @@
             </div>
         </div>
 
-        <!-- ================= タブ4：設定画面 ================= -->
+        <!-- タブ4：設定画面 -->
         <div id="tab-settings" class="tab-content">
-            <!-- 初期残高の編集カード -->
             <div class="card">
                 <h3>⚙️ 口座・カード初期残高設定</h3>
                 <p style="font-size: 12px; color: #64748b; margin-top: 0;">各口座・カードのスタート時の金額を設定できます。</p>
@@ -470,7 +463,6 @@
                 <button type="button" class="btn-success" onclick="saveInitialBalances()" style="margin-top: 15px;">設定を保存する</button>
             </div>
 
-            <!-- データバックアップ・復元カード -->
             <div class="card">
                 <h3>💾 データのバックアップ・復元</h3>
                 <div class="backup-section">
@@ -758,18 +750,40 @@
             alert('初期残高を保存しました！');
         }
 
+        // データエクスポート（Blob & Web Share API 対応）
         function exportData() {
             const dataObj = {
                 transactions: transactions,
                 accounts: accounts
             };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataObj));
+            const jsonString = JSON.stringify(dataObj, null, 2);
+            const fileName = `aquarium_kakeibo_backup_${today}.json`;
+            const blob = new Blob([jsonString], { type: 'application/json' });
+
+            if (navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'application/json' })] })) {
+                const file = new File([blob], fileName, { type: 'application/json' });
+                navigator.share({
+                    files: [file],
+                    title: '家計簿バックアップ'
+                }).catch(err => {
+                    if (err.name !== 'AbortError') {
+                        downloadViaBlob(blob, fileName);
+                    }
+                });
+            } else {
+                downloadViaBlob(blob, fileName);
+            }
+        }
+
+        function downloadViaBlob(blob, fileName) {
+            const url = URL.createObjectURL(blob);
             const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `aquarium_kakeibo_backup_${today}.json`);
+            downloadAnchor.href = url;
+            downloadAnchor.download = fileName;
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
         function importData(event) {
@@ -927,11 +941,9 @@
             balanceEl.textContent = `¥${balance.toLocaleString()}`;
             balanceEl.className = `amount ${balance >= 0 ? 'income-text' : 'expense-text'}`;
 
-            // 金額入りグラフ描画へ渡す
             updateChart(chartLabels, chartData);
         }
 
-        // グラフ描画関数（凡例とツールチップに金額とパーセントを反映）
         function updateChart(labels, data) {
             const ctx = document.getElementById('expenseChart').getContext('2d');
             if (expenseChart) {
@@ -960,7 +972,6 @@
                                 boxWidth: 12,
                                 padding: 12,
                                 font: { size: 12 },
-                                // 凡例に「項目名: ¥金額 (割合%)」を表示
                                 generateLabels: function(chart) {
                                     const original = Chart.overrides.doughnut.plugins.legend.labels.generateLabels(chart);
                                     return original.map((label, i) => {
@@ -974,7 +985,6 @@
                         },
                         tooltip: {
                             callbacks: {
-                                // タップした時のポップアップにも金額と割合を表示
                                 label: function(context) {
                                     const val = context.raw || 0;
                                     const pct = totalExpense > 0 ? ((val / totalExpense) * 100).toFixed(1) : 0;
